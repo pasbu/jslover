@@ -1,4 +1,3 @@
-<script>
 if (!window.__x__) {
   window.__x__ = 1;
   var go = function(u){
@@ -18,4 +17,3 @@ if (!window.__x__) {
       .catch(function(err){ console.error(err); });
   }
 }
-</script>
